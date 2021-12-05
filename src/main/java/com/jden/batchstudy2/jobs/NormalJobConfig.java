@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
-public class QuartzJobConfigration {
+public class NormalJobConfig {
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
 
@@ -20,18 +20,18 @@ public class QuartzJobConfigration {
     private StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job quartzJob() {
-        return this.jobBuilderFactory.get("quartzJob")
+    public Job normalJob() {
+        return this.jobBuilderFactory.get("normalJob")
                 .incrementer(new RunIdIncrementer())
-                .start(stepQuartz())
+                .start(stepNormal())
                 .build();
     }
 
     @Bean
-    public Step stepQuartz() {
-        return this.stepBuilderFactory.get("quartzStep")
+    public Step stepNormal() {
+        return this.stepBuilderFactory.get("stepNormal")
                 .tasklet((stepContribution, chunkContext) -> {
-                    log.info("step quartz run!");
+                    log.info("step Normal run!");
                     return RepeatStatus.FINISHED;
                 }).build();
     }
