@@ -7,12 +7,14 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.PassThroughLineMapper;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -34,7 +36,25 @@ public class ChunkJobConfig {
         return this.jobBuilderFactory.get("chunkJob")
                 .incrementer(new RunIdIncrementer())
                 .start(stepChunk())
+                .on("FAILED").to(failureChunkStep())
+                .end()
                 .build();
+    }
+
+    @Bean
+    public Step failureChunkStep() {
+        return this.stepBuilderFactory.get("failChunkStep")
+                .tasklet(logChunkError())
+                .build();
+    }
+
+    @Bean
+    public Tasklet logChunkError() {
+        return ((contribution, chunkContext) -> {
+            log.error("###### Error!!!");
+            return RepeatStatus.FINISHED;
+            // Step 의 상태는 ABANDONED 로 나타남.
+        });
     }
 
     @Bean
